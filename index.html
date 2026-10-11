@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>عرض المستند</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 16px;
+      background: #eeeeee;
+      font-family: Arial, sans-serif;
+    }
+    h2 {
+      text-align: center;
+      font-size: 20px;
+    }
+    .page {
+      display: block;
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto 16px;
+      border: 1px solid #ccc;
+      background: white;
+    }
+    .message {
+      text-align: center;
+      padding: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h2>عرض المستند</h2>
+  <div id="viewer" class="message">جارٍ تحميل المستند...</div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    const pdfUrl = './document.pdf.pdf';
+    const viewer = document.getElementById('viewer');
+
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    pdfjsLib.getDocument(pdfUrl).promise.then(async pdf => {
+      viewer.className = '';
+      viewer.textContent = '';
+
+      for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+        const page = await pdf.getPage(pageNumber);
+        const viewport = page.getViewport({ scale: 1.5 });
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+
+        canvas.className = 'page';
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        canvas.style.width = '100%';
+        canvas.style.height = 'auto';
+        viewer.appendChild(canvas);
+
+        await page.render({
+          canvasContext: context,
+          viewport: viewport
+        }).promise;
+      }
+    }).catch(error => {
+      viewer.className = 'message';
+      viewer.textContent =
+        'تعذر تحميل المستند. تحقق من اسم ملف PDF واتصال الإنترنت.';
+      console.error(error);
+    });
+  </script>
+</body>
+</html>
